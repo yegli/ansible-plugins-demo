@@ -1,0 +1,27 @@
+# Dynamic inventory: asks the local Docker daemon which containers exist.
+# Filename must end in docker.yml / docker.yaml for the plugin to accept it.
+plugin: community.docker.docker_containers
+docker_host: unix:///var/run/docker.sock   # Docker Desktop symlinks this to its socket
+connection_type: docker-cli                # Ansible runs `docker exec` into containers, no SSH
+
+# Only our demo containers, ignore everything else running on this machine
+filters:
+  - include: "docker_config.Labels.demo | default('') == 'inventory'"
+  - exclude: true
+
+# Container labels -> groups: role_web, role_db, env_prod, ...
+keyed_groups:
+  - prefix: role
+    key: docker_config.Labels.role
+  - prefix: env
+    key: docker_config.Labels.env
+
+# Conditional groups
+groups:
+  running: docker_state.Running
+  stopped: not docker_state.Running
+
+# Extra hostvars built from inspect data
+compose:
+  container_image: docker_config.Image
+  container_ip: docker_networksettings.Networks.values() | map(attribute='IPAddress') | first

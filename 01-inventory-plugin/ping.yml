@@ -1,0 +1,7 @@
+- name: Prove the dynamic inventory works
+  hosts: all
+  gather_facts: false
+  tasks:
+    - ansible.builtin.ping:
+    - ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} ({{ container_image }}, {{ container_ip }}) in {{ group_names }}"

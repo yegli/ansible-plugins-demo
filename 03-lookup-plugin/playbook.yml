@@ -1,0 +1,42 @@
+- name: Custom lookup plugin demo
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    # Lookups are lazy: evaluated every time the variable is used
+    db_host: "{{ lookup('dotenv', 'DB_HOST') }}"
+
+  tasks:
+    - name: Single value
+      ansible.builtin.debug:
+        msg: "App {{ lookup('dotenv', 'APP_NAME') }} talks to {{ db_host }}"
+
+    - name: lookup() returns a comma-joined string, query() returns a list
+      ansible.builtin.debug:
+        msg:
+          lookup: "{{ lookup('dotenv', 'DB_HOST', 'DB_PORT', 'DB_USER') }}"
+          query: "{{ query('dotenv', 'DB_HOST', 'DB_PORT', 'DB_USER') }}"
+
+    - name: Keyword arguments, default value and a different file
+      ansible.builtin.debug:
+        msg:
+          missing_key: "{{ lookup('dotenv', 'REDIS_URL', default='redis://localhost:6379') }}"
+          prod_db: "{{ lookup('dotenv', 'DB_HOST', file='prod.env') }}"
+          prod_key: "{{ lookup('dotenv', 'API_KEY', file='prod.env') | ansible.builtin.regex_replace('.(?=.{4})', '*') }}"
+
+    - name: Loop over a list value
+      ansible.builtin.debug:
+        msg: "feature enabled: {{ item }}"
+      loop: "{{ lookup('dotenv', 'FEATURE_FLAGS') | split(',') }}"
+
+    - name: Real use, render a config file from the .env values
+      ansible.builtin.copy:
+        dest: /tmp/acme-shop.conf
+        content: |
+          # Managed by Ansible, values from files/app.env
+          [database]
+          host = {{ db_host }}
+          port = {{ lookup('dotenv', 'DB_PORT') }}
+          user = {{ lookup('dotenv', 'DB_USER') }}
+          password = {{ lookup('dotenv', 'DB_PASSWORD') }}
+        mode: "0600"

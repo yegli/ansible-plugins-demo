@@ -1,0 +1,42 @@
+- name: Custom filter plugin demo
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - servers.yml
+
+  tasks:
+    - name: Without filters (raw data, hard to read, leaks secrets)
+      ansible.builtin.debug:
+        msg: "{{ item.name }} | disk={{ item.disk_bytes }} | pw={{ item.db_password }}"
+      loop: "{{ servers }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: With our filters (human_bytes, mask, slugify)
+      ansible.builtin.debug:
+        msg: "{{ item.name | slugify }} | disk={{ item.disk_bytes | human_bytes }} | pw={{ item.db_password | mask }}"
+      loop: "{{ servers }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Filters take arguments and chain with built-in filters
+      ansible.builtin.debug:
+        msg:
+          - "{{ servers | map(attribute='disk_bytes') | sum | human_bytes(precision=2) }} total disk"
+          - "{{ servers | map(attribute='name') | map('slugify') | join(', ') }}"
+          - "{{ 'my-api-token-123456' | mask(visible=2, char='#') }}"
+
+    - name: Typical real use, build hostnames from free-text names
+      ansible.builtin.debug:
+        msg: "{{ item.name | slugify }}.acme.internal"
+      loop: "{{ servers }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Filters are plain Python, so they are easy to test
+      ansible.builtin.assert:
+        that:
+          - 1536 | human_bytes == "1.5 KiB"
+          - "'hunter2-secret' | mask == '**********cret'"
+          - "'Acme Corp / Web Tier!' | slugify == 'acme-corp-web-tier'"
+        success_msg: "all filters behave as expected"

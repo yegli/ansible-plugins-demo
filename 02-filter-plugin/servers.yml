@@ -1,0 +1,11 @@
+# Sample data, the kind of thing you get back from a CMDB or cloud API.
+servers:
+  - name: "Web Frontend 01"
+    disk_bytes: 53687091200
+    db_password: "Sup3r-S3cret-Web!"
+  - name: "App Server (EU) 01"
+    disk_bytes: 214748364800
+    db_password: "AppPa55word-2026"
+  - name: "Postgres Primary"
+    disk_bytes: 1099511627776
+    db_password: "pg-root-K9x!vQ"

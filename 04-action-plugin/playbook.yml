@@ -1,0 +1,22 @@
+- name: Custom action plugin demo
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Preflight checks (runs on the controller, talks to each container)
+      preflight:
+        min_memory_mb: "{{ min_memory_mb | default(1024) }}"
+        min_cpus: "{{ min_cpus | default(2) }}"
+        min_python: "{{ min_python | default('3.10') }}"
+        report_dir: reports
+      register: preflight
+
+    - name: Show what the plugin returned
+      ansible.builtin.debug:
+        msg: "{{ preflight.msg }}, report: {{ preflight.report | relpath(playbook_dir) }}"
+
+    - name: Deploy (only reached by hosts that passed preflight)
+      ansible.builtin.copy:
+        dest: /tmp/release.txt
+        content: "acme-shop deployed at {{ now(fmt='%Y-%m-%d %H:%M:%S') }}\n"
+        mode: "0644"

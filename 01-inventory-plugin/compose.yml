@@ -1,0 +1,14 @@
+# Demo fleet: python image so Ansible modules (ping, setup) work via docker exec.
+name: plugin-demo
+
+x-node: &node
+  image: python:3.13-alpine
+  command: sleep infinity
+  init: true
+
+services:
+  web1:  { <<: *node, container_name: web1,  labels: { demo: inventory, role: web,   env: prod } }
+  web2:  { <<: *node, container_name: web2,  labels: { demo: inventory, role: web,   env: prod } }
+  app1:  { <<: *node, container_name: app1,  labels: { demo: inventory, role: app,   env: prod } }
+  db1:   { <<: *node, container_name: db1,   labels: { demo: inventory, role: db,    env: prod } }
+  cache1: { <<: *node, container_name: cache1, labels: { demo: inventory, role: cache, env: dev } }

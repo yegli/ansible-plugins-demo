@@ -1,0 +1,3 @@
+# Databases need more RAM than the rest of the fleet.
+# A typical laptop (or Docker Desktop VM) has less than this, so db1 is EXPECTED to fail preflight.
+min_memory_mb: 65536
